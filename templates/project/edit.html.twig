@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit {{ project.name }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('project_index') }}">Projects</a></li>
+        <li class="breadcrumb-item"><a href="{{ path('project_show', {'id': project.id}) }}">{{ project.name }}</a></li>
+        <li class="breadcrumb-item active">Edit</li>
+    </ol>
+</nav>
+
+<h1 class="mb-4"><i class="bi bi-pencil me-2"></i>Edit Project</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                {% include 'project/_form.html.twig' with {
+                    'button_label': 'Update Project',
+                    'cancel_url': path('project_show', {'id': project.id})
+                } %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{{ path('app_home') }}">
+            <i class="bi bi-journal-code me-2"></i>{{ app_name }}
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') starts with 'project_' ? 'active' : '' }}"
+                       href="{{ path('project_index') }}">
+                        <i class="bi bi-folder me-1"></i> Projects
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') starts with 'context_' ? 'active' : '' }}"
+                       href="{{ path('context_index') }}">
+                        <i class="bi bi-file-text me-1"></i> Contexts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') starts with 'template_' ? 'active' : '' }}"
+                       href="{{ path('template_index') }}">
+                        <i class="bi bi-file-earmark-code me-1"></i> Templates
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') starts with 'tag_' ? 'active' : '' }}"
+                       href="{{ path('tag_index') }}">
+                        <i class="bi bi-tags me-1"></i> Tags
+                    </a>
+                </li>
+            </ul>
+
+            <div class="d-flex">
+                <a href="{{ path('compose_index') }}" class="btn btn-light">
+                    <i class="bi bi-magic me-1"></i> Compose Prompt
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

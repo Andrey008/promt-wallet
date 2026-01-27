@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ project.name }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('project_index') }}">Projects</a></li>
+        <li class="breadcrumb-item active">{{ project.name }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1>{{ project.name }}</h1>
+        {% if project.stack %}
+            <p class="mb-2">
+                {% for tech in project.stack %}
+                    <span class="badge bg-secondary me-1">{{ tech }}</span>
+                {% endfor %}
+            </p>
+        {% endif %}
+        {% if project.description %}
+            <p class="text-muted">{{ project.description }}</p>
+        {% endif %}
+    </div>
+    <div class="btn-group">
+        <a href="{{ path('project_edit', {'id': project.id}) }}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Delete
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4><i class="bi bi-file-text me-2"></i>Contexts</h4>
+            <a href="{{ path('context_new', {'project': project.id}) }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Add Context
+            </a>
+        </div>
+
+        {% if contexts|length > 0 %}
+            <div class="list-group">
+                {% for context in contexts %}
+                    <a href="{{ path('context_show', {'id': context.id}) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ context.title }}</h6>
+                            <small class="text-muted">#{{ context.sortOrder }}</small>
+                        </div>
+                        <small class="text-muted">
+                            {{ context.content|length > 100 ? context.content|slice(0, 100) ~ '...' : context.content }}
+                        </small>
+                        {% if context.tags|length > 0 %}
+                            <div class="mt-2">
+                                {% include 'partials/_tag_badges.html.twig' with {'tags': context.tags} %}
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-light text-center">
+                <i class="bi bi-info-circle me-2"></i>
+                No contexts for this project yet.
+                <a href="{{ path('context_new', {'project': project.id}) }}">Create one</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Project Info
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Created</span>
+                    <span>{{ project.createdAt|date('M d, Y') }}</span>
+                </li>
+                {% if project.updatedAt %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Updated</span>
+                        <span>{{ project.updatedAt|date('M d, Y') }}</span>
+                    </li>
+                {% endif %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Contexts</span>
+                    <span>{{ contexts|length }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ project.name }}</strong>?</p>
+                <p class="text-muted small">This action cannot be undone. Project contexts will be preserved but will lose their project association.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ path('project_delete', {'id': project.id}) }}" method="post" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ project.id) }}">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

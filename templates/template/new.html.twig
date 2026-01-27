@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Template - {{ parent() }}{% endblock %}
+
+{% block body %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('template_index') }}">Templates</a></li>
+        <li class="breadcrumb-item active">New</li>
+    </ol>
+</nav>
+
+<h1 class="mb-4"><i class="bi bi-file-earmark-plus me-2"></i>New Template</h1>
+
+<div class="card">
+    <div class="card-body">
+        {% include 'template/_form.html.twig' with {
+            'button_label': 'Create Template',
+            'cancel_url': path('template_index'),
+            'placeholders': placeholders
+        } %}
+    </div>
+</div>
+{% endblock %}

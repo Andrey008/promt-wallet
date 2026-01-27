@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tag: {{ tag.name }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('tag_index') }}">Tags</a></li>
+        <li class="breadcrumb-item active">{{ tag.name }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <span class="badge tag-badge me-2" style="background-color: {{ tag.color ?? '#6c757d' }}; font-size: 1.5rem;">
+            {{ tag.name }}
+        </span>
+    </h1>
+    {% if contexts|length == 0 and templates|length == 0 %}
+        <form action="{{ path('tag_delete', {'id': tag.id}) }}" method="post"
+              onsubmit="return confirm('Delete this tag?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tag.id) }}">
+            <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i> Delete Tag
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<div class="row">
+    <!-- Contexts -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-text me-2"></i>Contexts</span>
+                <span class="badge bg-primary">{{ contexts|length }}</span>
+            </div>
+            {% if contexts|length > 0 %}
+                <div class="list-group list-group-flush">
+                    {% for context in contexts %}
+                        <a href="{{ path('context_show', {'id': context.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ context.title }}</span>
+                                <span class="badge scope-badge {{ context.scope == 'global' ? 'bg-info' : 'bg-success' }}">
+                                    {{ context.scope }}
+                                </span>
+                            </div>
+                            {% if context.project %}
+                                <small class="text-muted"><i class="bi bi-folder me-1"></i>{{ context.project.name }}</small>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card-body text-muted text-center">
+                    No contexts with this tag.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-code me-2"></i>Templates</span>
+                <span class="badge bg-primary">{{ templates|length }}</span>
+            </div>
+            {% if templates|length > 0 %}
+                <div class="list-group list-group-flush">
+                    {% for template in templates %}
+                        <a href="{{ path('template_show', {'id': template.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ template.title }}</span>
+                                <span class="badge bg-secondary">{{ template.targetModelLabel }}</span>
+                            </div>
+                            {% if template.description %}
+                                <small class="text-muted">{{ template.description|slice(0, 60) }}{% if template.description|length > 60 %}...{% endif %}</small>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card-body text-muted text-center">
+                    No templates with this tag.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

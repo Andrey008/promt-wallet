@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Search Contexts - {{ parent() }}{% endblock %}
+
+{% block body %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('context_index') }}">Contexts</a></li>
+        <li class="breadcrumb-item active">Search</li>
+    </ol>
+</nav>
+
+<h1 class="mb-4"><i class="bi bi-search me-2"></i>Search Contexts</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ path('context_search') }}">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control form-control-lg"
+                       placeholder="Search in titles and content..."
+                       value="{{ query }}" autofocus>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+            <small class="text-muted">Minimum 2 characters</small>
+        </form>
+    </div>
+</div>
+
+{% if query %}
+    <p class="text-muted mb-3">
+        Found {{ contexts|length }} result{{ contexts|length != 1 ? 's' : '' }} for "{{ query }}"
+    </p>
+
+    {% if contexts|length > 0 %}
+        <div class="list-group">
+            {% for context in contexts %}
+                <a href="{{ path('context_show', {'id': context.id}) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">
+                            {{ context.title }}
+                            <span class="badge scope-badge {{ context.scope == 'global' ? 'bg-info' : 'bg-success' }} ms-2">
+                                {{ context.scope }}
+                            </span>
+                        </h5>
+                    </div>
+                    {% if context.project %}
+                        <small class="text-muted d-block">
+                            <i class="bi bi-folder me-1"></i>{{ context.project.name }}
+                        </small>
+                    {% endif %}
+                    <p class="mb-1 mt-2 text-muted small">
+                        {{ context.content|length > 200 ? context.content|slice(0, 200) ~ '...' : context.content }}
+                    </p>
+                    {% if context.tags|length > 0 %}
+                        <div class="mt-2">
+                            {% include 'partials/_tag_badges.html.twig' with {'tags': context.tags} %}
+                        </div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No contexts found matching "{{ query }}".
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

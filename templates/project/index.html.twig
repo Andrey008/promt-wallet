@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projects - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-folder me-2"></i>Projects</h1>
+    <a href="{{ path('project_new') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> New Project
+    </a>
+</div>
+
+{% if projects|length > 0 %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for item in projects %}
+            {% set project = item[0] is defined ? item[0] : item %}
+            {% set contextCount = item.contextCount is defined ? item.contextCount : project.contexts|length %}
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{{ path('project_show', {'id': project.id}) }}" class="text-decoration-none">
+                                {{ project.name }}
+                            </a>
+                        </h5>
+
+                        {% if project.description %}
+                            <p class="card-text text-muted small">
+                                {{ project.description|length > 100 ? project.description|slice(0, 100) ~ '...' : project.description }}
+                            </p>
+                        {% endif %}
+
+                        {% if project.stack %}
+                            <p class="card-text">
+                                {% for tech in project.stack %}
+                                    <span class="badge bg-secondary me-1">{{ tech }}</span>
+                                {% endfor %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-file-text me-1"></i>{{ contextCount }} context{{ contextCount != 1 ? 's' : '' }}
+                        </small>
+                        <div>
+                            <a href="{{ path('project_edit', {'id': project.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-folder-x d-block"></i>
+        <h5>No projects yet</h5>
+        <p class="text-muted">Create your first project to start organizing contexts.</p>
+        <a href="{{ path('project_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Create Project
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

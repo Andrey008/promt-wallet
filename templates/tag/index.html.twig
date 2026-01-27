@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tags - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-tags me-2"></i>Tags</h1>
+</div>
+
+<p class="text-muted mb-4">
+    Tags are created automatically when you add them to contexts or templates.
+</p>
+
+{% if tags|length > 0 %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Tag</th>
+                    <th class="text-center">Contexts</th>
+                    <th class="text-center">Templates</th>
+                    <th class="text-center">Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tags %}
+                    {% set tag = item[0] is defined ? item[0] : item %}
+                    {% set contextCount = item.contextCount is defined ? item.contextCount : tag.contexts|length %}
+                    {% set templateCount = item.templateCount is defined ? item.templateCount : tag.promptTemplates|length %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('tag_show', {'id': tag.id}) }}" class="text-decoration-none">
+                                <span class="badge tag-badge" style="background-color: {{ tag.color ?? '#6c757d' }}; font-size: 1rem;">
+                                    {{ tag.name }}
+                                </span>
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark">{{ contextCount }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark">{{ templateCount }}</span>
+                        </td>
+                        <td class="text-center text-muted small">
+                            {{ tag.createdAt|date('M d, Y') }}
+                        </td>
+                        <td class="text-end">
+                            {% if contextCount == 0 and templateCount == 0 %}
+                                <form action="{{ path('tag_delete', {'id': tag.id}) }}" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete tag {{ tag.name }}?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tag.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-tags d-block"></i>
+        <h5>No tags yet</h5>
+        <p class="text-muted">Tags will appear here when you add them to contexts or templates.</p>
+    </div>
+{% endif %}
+{% endblock %}

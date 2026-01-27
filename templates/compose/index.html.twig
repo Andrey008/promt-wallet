@@ -1,0 +1,281 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Compose Prompt - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-magic me-2"></i>Compose Prompt</h1>
+</div>
+
+<div class="row">
+    <!-- Left: Selection Panel -->
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-sliders me-2"></i>Configuration
+            </div>
+            <div class="card-body">
+                <!-- Project Selection -->
+                <div class="mb-4">
+                    <label for="project-select" class="form-label">
+                        <i class="bi bi-folder me-1"></i>Project (optional)
+                    </label>
+                    <select id="project-select" class="form-select">
+                        <option value="">-- No project (global contexts only) --</option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}" {{ selectedProject and selectedProject.id == project.id ? 'selected' : '' }}>
+                                {{ project.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Select a project to include project-specific contexts</small>
+                </div>
+
+                <!-- Template Selection -->
+                <div class="mb-4">
+                    <label for="template-select" class="form-label">
+                        <i class="bi bi-file-earmark-code me-1"></i>Template <span class="text-danger">*</span>
+                    </label>
+                    <select id="template-select" class="form-select" required>
+                        <option value="">-- Select a template --</option>
+                        {% for template in templates %}
+                            <option value="{{ template.id }}" {{ selectedTemplate and selectedTemplate.id == template.id ? 'selected' : '' }}>
+                                {{ template.title }} ({{ template.targetModelLabel }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Context Selection -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="bi bi-file-text me-1"></i>Contexts
+                    </label>
+                    <div id="contexts-container" class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                        {% if availableContexts|length > 0 %}
+                            {% for context in availableContexts %}
+                                <div class="form-check mb-2">
+                                    <input type="checkbox" class="form-check-input context-checkbox"
+                                           id="context-{{ context.id }}"
+                                           value="{{ context.id }}"
+                                           {{ context.id in selectedContextIds ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="context-{{ context.id }}">
+                                        {{ context.title }}
+                                        <span class="badge scope-badge {{ context.scope == 'global' ? 'bg-info' : 'bg-success' }} ms-1">
+                                            {{ context.scope }}
+                                        </span>
+                                        {% if context.project %}
+                                            <small class="text-muted">({{ context.project.name }})</small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0 text-center">No contexts available</p>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="select-all-contexts">
+                            Select All
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="deselect-all-contexts">
+                            Deselect All
+                        </button>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100" id="compose-btn">
+                    <i class="bi bi-play me-1"></i> Compose
+                </button>
+            </div>
+        </div>
+
+        <!-- Available Placeholders -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-braces me-2"></i>Available Placeholders
+            </div>
+            <ul class="list-group list-group-flush small">
+                {% for placeholder, description in placeholders %}
+                    <li class="list-group-item">
+                        <code>{{ placeholder }}</code>
+                        <span class="text-muted ms-2">{{ description }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Right: Result Panel -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-terminal me-2"></i>Composed Prompt</span>
+                <div>
+                    <span id="result-stats" class="me-3 text-muted small"></span>
+                    <button type="button" class="btn btn-sm btn-primary btn-copy" id="copy-btn" disabled data-copy-target="#result-content">
+                        <i class="bi bi-clipboard me-1"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="result-placeholder" class="text-center text-muted py-5">
+                    <i class="bi bi-arrow-left display-4 d-block mb-3"></i>
+                    <p>Select a template and contexts, then click "Compose"</p>
+                </div>
+                <div id="result-error" class="alert alert-danger d-none"></div>
+                <div id="result-wrapper" class="d-none">
+                    <pre class="prompt-preview bg-light p-3 rounded mb-0" id="result-content"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const projectSelect = document.getElementById('project-select');
+    const templateSelect = document.getElementById('template-select');
+    const contextsContainer = document.getElementById('contexts-container');
+    const composeBtn = document.getElementById('compose-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const resultPlaceholder = document.getElementById('result-placeholder');
+    const resultWrapper = document.getElementById('result-wrapper');
+    const resultContent = document.getElementById('result-content');
+    const resultError = document.getElementById('result-error');
+    const resultStats = document.getElementById('result-stats');
+
+    // Load contexts when project changes
+    projectSelect.addEventListener('change', async function() {
+        const projectId = this.value;
+        const url = projectId
+            ? `{{ path('compose_contexts') }}?project=${projectId}`
+            : `{{ path('compose_contexts') }}`;
+
+        try {
+            const response = await fetch(url);
+            const contexts = await response.json();
+
+            contextsContainer.innerHTML = '';
+
+            if (contexts.length > 0) {
+                contexts.forEach(ctx => {
+                    const div = document.createElement('div');
+                    div.className = 'form-check mb-2';
+                    div.innerHTML = `
+                        <input type="checkbox" class="form-check-input context-checkbox"
+                               id="context-${ctx.id}" value="${ctx.id}">
+                        <label class="form-check-label" for="context-${ctx.id}">
+                            ${ctx.title}
+                            <span class="badge scope-badge ${ctx.scope === 'global' ? 'bg-info' : 'bg-success'} ms-1">
+                                ${ctx.scope}
+                            </span>
+                            ${ctx.project ? `<small class="text-muted">(${ctx.project})</small>` : ''}
+                        </label>
+                    `;
+                    contextsContainer.appendChild(div);
+                });
+            } else {
+                contextsContainer.innerHTML = '<p class="text-muted mb-0 text-center">No contexts available</p>';
+            }
+        } catch (err) {
+            console.error('Failed to load contexts:', err);
+        }
+    });
+
+    // Select/Deselect all contexts
+    document.getElementById('select-all-contexts').addEventListener('click', function() {
+        document.querySelectorAll('.context-checkbox').forEach(cb => cb.checked = true);
+    });
+
+    document.getElementById('deselect-all-contexts').addEventListener('click', function() {
+        document.querySelectorAll('.context-checkbox').forEach(cb => cb.checked = false);
+    });
+
+    // Compose
+    composeBtn.addEventListener('click', async function() {
+        const templateId = templateSelect.value;
+        const projectId = projectSelect.value;
+        const contextIds = Array.from(document.querySelectorAll('.context-checkbox:checked'))
+            .map(cb => parseInt(cb.value));
+
+        if (!templateId) {
+            showError('Please select a template.');
+            return;
+        }
+
+        composeBtn.disabled = true;
+        composeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Composing...';
+
+        try {
+            const response = await fetch('{{ path('compose_render') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    project: projectId || null,
+                    template: templateId,
+                    contexts: contextIds,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showResult(data.result, data.length, data.contextCount);
+            } else {
+                showError(data.error || 'An error occurred.');
+            }
+        } catch (err) {
+            showError('Failed to compose prompt. Please try again.');
+            console.error(err);
+        } finally {
+            composeBtn.disabled = false;
+            composeBtn.innerHTML = '<i class="bi bi-play me-1"></i> Compose';
+        }
+    });
+
+    function showResult(content, length, contextCount) {
+        resultPlaceholder.classList.add('d-none');
+        resultError.classList.add('d-none');
+        resultWrapper.classList.remove('d-none');
+        resultContent.textContent = content;
+        resultStats.textContent = `${length.toLocaleString()} chars | ${contextCount} context${contextCount !== 1 ? 's' : ''}`;
+        copyBtn.disabled = false;
+    }
+
+    function showError(message) {
+        resultPlaceholder.classList.add('d-none');
+        resultWrapper.classList.add('d-none');
+        resultError.classList.remove('d-none');
+        resultError.textContent = message;
+        resultStats.textContent = '';
+        copyBtn.disabled = true;
+    }
+
+    // Copy functionality (enhanced)
+    copyBtn.addEventListener('click', async function() {
+        const text = resultContent.textContent;
+        try {
+            await navigator.clipboard.writeText(text);
+            const originalHtml = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-check me-1"></i> Copied!';
+            this.classList.add('btn-success');
+            this.classList.remove('btn-primary');
+
+            setTimeout(() => {
+                this.innerHTML = originalHtml;
+                this.classList.remove('btn-success');
+                this.classList.add('btn-primary');
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            alert('Failed to copy to clipboard. Please select and copy manually.');
+        }
+    });
+});
+</script>
+{% endblock %}

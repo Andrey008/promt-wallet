@@ -1,0 +1,13 @@
+{#
+    Render tag badges
+    Usage: {% include 'partials/_tag_badges.html.twig' with {'tags': entity.tags} %}
+#}
+{% if tags is defined and tags|length > 0 %}
+    {% for tag in tags %}
+        <a href="{{ path('tag_show', {'id': tag.id}) }}"
+           class="badge tag-badge text-decoration-none me-1"
+           style="background-color: {{ tag.color ?? '#6c757d' }}">
+            {{ tag.name }}
+        </a>
+    {% endfor %}
+{% endif %}

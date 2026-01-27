@@ -1,0 +1,52 @@
+{{ form_start(form) }}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mb-3">
+                {{ form_row(form.title) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_row(form.body) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_row(form.description) }}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="mb-3">
+                {{ form_row(form.targetModel) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_row(form.tagsString) }}
+            </div>
+
+            {% if placeholders is defined %}
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-braces me-2"></i>Available Placeholders
+                    </div>
+                    <ul class="list-group list-group-flush small">
+                        {% for placeholder, description in placeholders %}
+                            <li class="list-group-item">
+                                <code>{{ placeholder }}</code>
+                                <br><span class="text-muted">{{ description }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i> {{ button_label|default('Save') }}
+        </button>
+        <a href="{{ cancel_url|default(path('template_index')) }}" class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
+{{ form_end(form) }}

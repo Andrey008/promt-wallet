@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ context.title }} - {{ parent() }}{% endblock %}
+
+{% block body %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ path('context_index') }}">Contexts</a></li>
+        <li class="breadcrumb-item active">{{ context.title }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1>
+            {{ context.title }}
+            <span class="badge scope-badge {{ context.scope == 'global' ? 'bg-info' : 'bg-success' }} ms-2">
+                {{ context.scope }}
+            </span>
+        </h1>
+        {% if context.project %}
+            <p class="text-muted mb-2">
+                <i class="bi bi-folder me-1"></i>
+                <a href="{{ path('project_show', {'id': context.project.id}) }}">{{ context.project.name }}</a>
+            </p>
+        {% endif %}
+        {% if context.tags|length > 0 %}
+            <div class="mb-3">
+                {% include 'partials/_tag_badges.html.twig' with {'tags': context.tags} %}
+            </div>
+        {% endif %}
+    </div>
+    <div class="btn-group">
+        <button type="button" class="btn btn-outline-primary btn-copy" data-copy-target="#raw-content">
+            <i class="bi bi-clipboard me-1"></i> Copy Raw
+        </button>
+        <a href="{{ path('context_edit', {'id': context.id}) }}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </a>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="bi bi-trash me-1"></i> Delete
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Preview Tab -->
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#preview" type="button">
+                    <i class="bi bi-eye me-1"></i> Preview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">
+                    <i class="bi bi-code me-1"></i> Raw
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="preview" role="tabpanel">
+                <div class="card">
+                    <div class="card-body markdown-content">
+                        {{ htmlContent|raw }}
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="raw" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <pre class="mb-0" id="raw-content"><code>{{ context.content }}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Context Info
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Scope</span>
+                    <span class="badge {{ context.scope == 'global' ? 'bg-info' : 'bg-success' }}">{{ context.scope }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Sort Order</span>
+                    <span>{{ context.sortOrder }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Created</span>
+                    <span>{{ context.createdAt|date('M d, Y') }}</span>
+                </li>
+                {% if context.updatedAt %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Updated</span>
+                        <span>{{ context.updatedAt|date('M d, Y') }}</span>
+                    </li>
+                {% endif %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Length</span>
+                    <span>{{ context.content|length }} chars</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="bi bi-lightning me-2"></i>Quick Actions
+            </div>
+            <div class="card-body">
+                <a href="{{ path('compose_index', {'context': context.id}) }}" class="btn btn-primary w-100">
+                    <i class="bi bi-magic me-1"></i> Use in Compose
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Context</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ context.title }}</strong>?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ path('context_delete', {'id': context.id}) }}" method="post" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ context.id) }}">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

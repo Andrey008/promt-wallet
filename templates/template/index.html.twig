@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Templates - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-file-earmark-code me-2"></i>Prompt Templates</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ path('template_search') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-search me-1"></i> Search
+        </a>
+        <a href="{{ path('template_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> New Template
+        </a>
+    </div>
+</div>
+
+<!-- Filter by Model -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Target Model</label>
+                <select name="model" class="form-select" onchange="this.form.submit()">
+                    <option value="">All models</option>
+                    {% for value, label in models %}
+                        <option value="{{ value }}" {{ currentModel == value ? 'selected' : '' }}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                {% if currentModel %}
+                    <a href="{{ path('template_index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-1"></i> Clear filter
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if templates|length > 0 %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for template in templates %}
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title">
+                                <a href="{{ path('template_show', {'id': template.id}) }}" class="text-decoration-none">
+                                    {{ template.title }}
+                                </a>
+                            </h5>
+                            <span class="badge bg-secondary">{{ template.targetModelLabel }}</span>
+                        </div>
+
+                        {% if template.description %}
+                            <p class="card-text text-muted small">
+                                {{ template.description|length > 100 ? template.description|slice(0, 100) ~ '...' : template.description }}
+                            </p>
+                        {% endif %}
+
+                        <p class="card-text">
+                            <code class="small">{{ template.body|length > 80 ? template.body|slice(0, 80) ~ '...' : template.body }}</code>
+                        </p>
+
+                        {% if template.tags|length > 0 %}
+                            <div class="mt-2">
+                                {% include 'partials/_tag_badges.html.twig' with {'tags': template.tags} %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {{ template.createdAt|date('M d, Y') }}
+                        </small>
+                        <div>
+                            <a href="{{ path('compose_index', {'template': template.id}) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-magic"></i> Use
+                            </a>
+                            <a href="{{ path('template_edit', {'id': template.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <i class="bi bi-file-earmark-code d-block"></i>
+        <h5>No templates found</h5>
+        <p class="text-muted">
+            {% if currentModel %}
+                No templates for the selected model.
+            {% else %}
+                Create your first prompt template to speed up your workflow.
+            {% endif %}
+        </p>
+        <a href="{{ path('template_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Create Template
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+    <a href="{{ path('compose_index') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-magic me-2"></i>Compose Prompt
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row row-cols-2 row-cols-md-4 g-4 mb-5">
+    <div class="col">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-folder display-4"></i>
+                <h2 class="mt-2 mb-0">{{ stats.projects }}</h2>
+                <p class="mb-0">Projects</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{{ path('project_index') }}" class="text-white-50 small">View all &rarr;</a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-file-text display-4"></i>
+                <h2 class="mt-2 mb-0">{{ stats.contexts }}</h2>
+                <p class="mb-0">Contexts</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{{ path('context_index') }}" class="text-white-50 small">View all &rarr;</a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-code display-4"></i>
+                <h2 class="mt-2 mb-0">{{ stats.templates }}</h2>
+                <p class="mb-0">Templates</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{{ path('template_index') }}" class="text-white-50 small">View all &rarr;</a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-tags display-4"></i>
+                <h2 class="mt-2 mb-0">{{ stats.tags }}</h2>
+                <p class="mb-0">Tags</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center">
+                <a href="{{ path('tag_index') }}" class="text-white-50 small">View all &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-5">
+    <div class="card-header">
+        <i class="bi bi-lightning me-2"></i>Quick Actions
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <a href="{{ path('project_new') }}" class="btn btn-outline-primary w-100 py-3">
+                    <i class="bi bi-folder-plus d-block fs-4 mb-1"></i>
+                    New Project
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ path('context_new') }}" class="btn btn-outline-success w-100 py-3">
+                    <i class="bi bi-file-earmark-plus d-block fs-4 mb-1"></i>
+                    New Context
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ path('template_new') }}" class="btn btn-outline-info w-100 py-3">
+                    <i class="bi bi-file-code d-block fs-4 mb-1"></i>
+                    New Template
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ path('compose_index') }}" class="btn btn-outline-dark w-100 py-3">
+                    <i class="bi bi-magic d-block fs-4 mb-1"></i>
+                    Compose Prompt
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Projects -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-folder me-2"></i>Recent Projects</span>
+                <a href="{{ path('project_index') }}" class="small">View all</a>
+            </div>
+            {% if recentProjects|length > 0 %}
+                <div class="list-group list-group-flush">
+                    {% for project in recentProjects %}
+                        <a href="{{ path('project_show', {'id': project.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ project.name }}</span>
+                                <small class="text-muted">{{ project.contexts|length }} ctx</small>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card-body text-muted text-center small">
+                    No projects yet
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Contexts -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-text me-2"></i>Recent Contexts</span>
+                <a href="{{ path('context_index') }}" class="small">View all</a>
+            </div>
+            {% if recentContexts|length > 0 %}
+                <div class="list-group list-group-flush">
+                    {% for context in recentContexts %}
+                        <a href="{{ path('context_show', {'id': context.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ context.title|length > 25 ? context.title|slice(0, 25) ~ '...' : context.title }}</span>
+                                <span class="badge scope-badge {{ context.scope == 'global' ? 'bg-info' : 'bg-success' }}">
+                                    {{ context.scope }}
+                                </span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card-body text-muted text-center small">
+                    No contexts yet
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Templates -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-code me-2"></i>Recent Templates</span>
+                <a href="{{ path('template_index') }}" class="small">View all</a>
+            </div>
+            {% if recentTemplates|length > 0 %}
+                <div class="list-group list-group-flush">
+                    {% for template in recentTemplates %}
+                        <a href="{{ path('template_show', {'id': template.id}) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>{{ template.title|length > 25 ? template.title|slice(0, 25) ~ '...' : template.title }}</span>
+                                <span class="badge bg-secondary">{{ template.targetModelLabel }}</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card-body text-muted text-center small">
+                    No templates yet
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
