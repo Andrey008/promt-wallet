@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Tag;
+use App\Entity\User;
 use App\Repository\ContextRepository;
 use App\Repository\PromptTemplateRepository;
 use App\Repository\TagRepository;
@@ -35,8 +36,10 @@ class TagController extends AbstractController
     #[Route('/{id}', name: 'tag_show', methods: ['GET'])]
     public function show(Tag $tag): Response
     {
-        $contexts = $this->contextRepository->findByTag($tag);
-        $templates = $this->templateRepository->findByTag($tag);
+        /** @var User $user */
+        $user = $this->getUser();
+        $contexts = $this->contextRepository->findByTag($tag, $user);
+        $templates = $this->templateRepository->findByTag($tag, $user);
 
         return $this->render('tag/show.html.twig', [
             'tag' => $tag,

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Project;
+use App\Entity\User;
 use App\Form\ProjectType;
 use App\Repository\ContextRepository;
 use App\Repository\ProjectRepository;
@@ -24,7 +25,9 @@ class ProjectController extends AbstractController
     #[Route('', name: 'project_index', methods: ['GET'])]
     public function index(): Response
     {
-        $projects = $this->projectRepository->findWithContextCount();
+        /** @var User $user */
+        $user = $this->getUser();
+        $projects = $this->projectRepository->findWithContextCount($user);
 
         return $this->render('project/index.html.twig', [
             'projects' => $projects,
@@ -39,6 +42,9 @@ class ProjectController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            /** @var User $user */
+            $user = $this->getUser();
+            $project->setOwner($user);
             $this->entityManager->persist($project);
             $this->entityManager->flush();
 
@@ -55,7 +61,11 @@ class ProjectController extends AbstractController
     #[Route('/{id}', name: 'project_show', methods: ['GET'])]
     public function show(Project $project): Response
     {
-        $contexts = $this->contextRepository->findByProject($project);
+        $this->denyAccessUnlessOwner($project);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $contexts = $this->contextRepository->findByProject($project, $user);
 
         return $this->render('project/show.html.twig', [
             'project' => $project,
@@ -66,6 +76,8 @@ class ProjectController extends AbstractController
     #[Route('/{id}/edit', name: 'project_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Project $project): Response
     {
+        $this->denyAccessUnlessOwner($project);
+
         $form = $this->createForm(ProjectType::class, $project);
         $form->handleRequest($request);
 
@@ -86,6 +98,8 @@ class ProjectController extends AbstractController
     #[Route('/{id}/delete', name: 'project_delete', methods: ['POST'])]
     public function delete(Request $request, Project $project): Response
     {
+        $this->denyAccessUnlessOwner($project);
+
         if ($this->isCsrfTokenValid('delete' . $project->getId(), $request->request->get('_token'))) {
             $this->entityManager->remove($project);
             $this->entityManager->flush();
@@ -94,5 +108,12 @@ class ProjectController extends AbstractController
         }
 
         return $this->redirectToRoute('project_index');
+    }
+
+    private function denyAccessUnlessOwner(Project $project): void
+    {
+        if ($project->getOwner() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
     }
 }

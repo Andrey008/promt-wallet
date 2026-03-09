@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\ContextRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\PromptTemplateRepository;
@@ -25,27 +26,34 @@ class ComposeController extends AbstractController
     #[Route('', name: 'compose_index', methods: ['GET'])]
     public function index(Request $request): Response
     {
-        $projects = $this->projectRepository->findAllOrdered();
-        $templates = $this->templateRepository->findAllOrdered();
+        /** @var User $user */
+        $user = $this->getUser();
 
-        // Pre-select from query params
+        $projects = $this->projectRepository->findAllOrdered($user);
+        $templates = $this->templateRepository->findAllOrdered($user);
+
         $selectedProjectId = $request->query->get('project');
         $selectedTemplateId = $request->query->get('template');
         $selectedContextIds = $request->query->all('context');
 
         $selectedProject = null;
-        $availableContexts = $this->contextRepository->findGlobal();
+        $availableContexts = $this->contextRepository->findGlobal($user);
 
         if ($selectedProjectId) {
             $selectedProject = $this->projectRepository->find($selectedProjectId);
-            if ($selectedProject) {
-                $availableContexts = $this->contextRepository->findForComposition($selectedProject);
+            if ($selectedProject && $selectedProject->getOwner() === $user) {
+                $availableContexts = $this->contextRepository->findForComposition($selectedProject, $user);
+            } else {
+                $selectedProject = null;
             }
         }
 
         $selectedTemplate = null;
         if ($selectedTemplateId) {
             $selectedTemplate = $this->templateRepository->find($selectedTemplateId);
+            if ($selectedTemplate && $selectedTemplate->getOwner() !== $user) {
+                $selectedTemplate = null;
+            }
         }
 
         return $this->render('compose/index.html.twig', [
@@ -62,6 +70,9 @@ class ComposeController extends AbstractController
     #[Route('/render', name: 'compose_render', methods: ['POST'])]
     public function renderComposition(Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         $data = json_decode($request->getContent(), true);
 
         $projectId = $data['project'] ?? null;
@@ -76,7 +87,7 @@ class ComposeController extends AbstractController
         }
 
         $template = $this->templateRepository->find($templateId);
-        if (!$template) {
+        if (!$template || $template->getOwner() !== $user) {
             return new JsonResponse([
                 'success' => false,
                 'error' => 'Template not found.',
@@ -86,12 +97,14 @@ class ComposeController extends AbstractController
         $project = null;
         if ($projectId) {
             $project = $this->projectRepository->find($projectId);
+            if ($project && $project->getOwner() !== $user) {
+                $project = null;
+            }
         }
 
         $contexts = [];
         if (!empty($contextIds)) {
-            $contexts = $this->contextRepository->findBy(['id' => $contextIds]);
-            // Sort by sortOrder
+            $contexts = $this->contextRepository->findBy(['id' => $contextIds, 'owner' => $user]);
             usort($contexts, fn($a, $b) => $a->getSortOrder() <=> $b->getSortOrder());
         }
 
@@ -108,14 +121,20 @@ class ComposeController extends AbstractController
     #[Route('/contexts', name: 'compose_contexts', methods: ['GET'])]
     public function getContexts(Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         $projectId = $request->query->get('project');
 
         $project = null;
         if ($projectId) {
             $project = $this->projectRepository->find($projectId);
+            if ($project && $project->getOwner() !== $user) {
+                $project = null;
+            }
         }
 
-        $contexts = $this->contextRepository->findForComposition($project);
+        $contexts = $this->contextRepository->findForComposition($project, $user);
 
         $data = [];
         foreach ($contexts as $context) {

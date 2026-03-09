@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Project;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,39 +18,42 @@ class ProjectRepository extends ServiceEntityRepository
     }
 
     /**
-     * Find all projects ordered by name
      * @return Project[]
      */
-    public function findAllOrdered(): array
+    public function findAllOrdered(User $user): array
     {
         return $this->createQueryBuilder('p')
+            ->where('p.owner = :user')
+            ->setParameter('user', $user)
             ->orderBy('p.name', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
     /**
-     * Find projects with context count
      * @return array<array{project: Project, contextCount: int}>
      */
-    public function findWithContextCount(): array
+    public function findWithContextCount(User $user): array
     {
         return $this->createQueryBuilder('p')
             ->select('p')
             ->addSelect('SIZE(p.contexts) as contextCount')
+            ->where('p.owner = :user')
+            ->setParameter('user', $user)
             ->orderBy('p.name', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
     /**
-     * Find recently updated projects
      * @return Project[]
      */
-    public function findRecent(int $limit = 5): array
+    public function findRecent(User $user, int $limit = 5): array
     {
         return $this->createQueryBuilder('p')
             ->addSelect('COALESCE(p.updatedAt, p.createdAt) AS HIDDEN lastModified')
+            ->where('p.owner = :user')
+            ->setParameter('user', $user)
             ->orderBy('lastModified', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()

@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Context;
 use App\Entity\Project;
+use App\Entity\User;
+use App\Repository\ProjectRepository;
 use App\Service\TagService;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -24,6 +26,29 @@ class ContextType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $user = $options['user'];
+
+        $projectOptions = [
+            'class' => Project::class,
+            'choice_label' => 'name',
+            'label' => 'Project',
+            'required' => false,
+            'placeholder' => '-- Select Project --',
+            'attr' => [
+                'class' => 'form-select',
+            ],
+            'help' => 'Required when scope is "Project-specific"',
+        ];
+
+        if ($user instanceof User) {
+            $projectOptions['query_builder'] = function (ProjectRepository $repo) use ($user) {
+                return $repo->createQueryBuilder('p')
+                    ->where('p.owner = :user')
+                    ->setParameter('user', $user)
+                    ->orderBy('p.name', 'ASC');
+            };
+        }
+
         $builder
             ->add('title', TextType::class, [
                 'label' => 'Title',
@@ -50,17 +75,7 @@ class ContextType extends AbstractType
                     'class' => 'form-select',
                 ],
             ])
-            ->add('project', EntityType::class, [
-                'class' => Project::class,
-                'choice_label' => 'name',
-                'label' => 'Project',
-                'required' => false,
-                'placeholder' => '-- Select Project --',
-                'attr' => [
-                    'class' => 'form-select',
-                ],
-                'help' => 'Required when scope is "Project-specific"',
-            ])
+            ->add('project', EntityType::class, $projectOptions)
             ->add('sortOrder', IntegerType::class, [
                 'label' => 'Sort Order',
                 'required' => false,
@@ -115,6 +130,9 @@ class ContextType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Context::class,
+            'user' => null,
         ]);
+
+        $resolver->setAllowedTypes('user', [User::class, 'null']);
     }
 }

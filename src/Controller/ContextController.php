@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Context;
+use App\Entity\User;
 use App\Form\ContextType;
 use App\Repository\ContextRepository;
 use App\Repository\ProjectRepository;
@@ -26,19 +27,25 @@ class ContextController extends AbstractController
     #[Route('', name: 'context_index', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
         $scope = $request->query->get('scope');
         $projectId = $request->query->get('project');
 
         if ($scope === 'global') {
-            $contexts = $this->contextRepository->findGlobal();
+            $contexts = $this->contextRepository->findGlobal($user);
         } elseif ($projectId) {
             $project = $this->projectRepository->find($projectId);
-            $contexts = $project ? $this->contextRepository->findByProject($project) : [];
+            if ($project && $project->getOwner() === $user) {
+                $contexts = $this->contextRepository->findByProject($project, $user);
+            } else {
+                $contexts = [];
+            }
         } else {
-            $contexts = $this->contextRepository->findAllOrdered();
+            $contexts = $this->contextRepository->findAllOrdered($user);
         }
 
-        $projects = $this->projectRepository->findAllOrdered();
+        $projects = $this->projectRepository->findAllOrdered($user);
 
         return $this->render('context/index.html.twig', [
             'contexts' => $contexts,
@@ -51,22 +58,24 @@ class ContextController extends AbstractController
     #[Route('/new', name: 'context_new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
         $context = new Context();
 
-        // Pre-select project if passed in query
         $projectId = $request->query->get('project');
         if ($projectId) {
             $project = $this->projectRepository->find($projectId);
-            if ($project) {
+            if ($project && $project->getOwner() === $user) {
                 $context->setProject($project);
                 $context->setScope(Context::SCOPE_PROJECT);
             }
         }
 
-        $form = $this->createForm(ContextType::class, $context);
+        $form = $this->createForm(ContextType::class, $context, ['user' => $user]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $context->setOwner($user);
             $this->entityManager->persist($context);
             $this->entityManager->flush();
 
@@ -83,11 +92,13 @@ class ContextController extends AbstractController
     #[Route('/search', name: 'context_search', methods: ['GET'])]
     public function search(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
         $query = $request->query->get('q', '');
         $contexts = [];
 
         if (strlen($query) >= 2) {
-            $contexts = $this->contextRepository->search($query);
+            $contexts = $this->contextRepository->search($query, $user);
         }
 
         return $this->render('context/search.html.twig', [
@@ -99,6 +110,8 @@ class ContextController extends AbstractController
     #[Route('/{id}', name: 'context_show', methods: ['GET'])]
     public function show(Context $context): Response
     {
+        $this->denyAccessUnlessOwner($context);
+
         $htmlContent = $this->markdownService->toHtml($context->getContent());
 
         return $this->render('context/show.html.twig', [
@@ -110,7 +123,11 @@ class ContextController extends AbstractController
     #[Route('/{id}/edit', name: 'context_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Context $context): Response
     {
-        $form = $this->createForm(ContextType::class, $context);
+        $this->denyAccessUnlessOwner($context);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $form = $this->createForm(ContextType::class, $context, ['user' => $user]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -130,6 +147,8 @@ class ContextController extends AbstractController
     #[Route('/{id}/delete', name: 'context_delete', methods: ['POST'])]
     public function delete(Request $request, Context $context): Response
     {
+        $this->denyAccessUnlessOwner($context);
+
         if ($this->isCsrfTokenValid('delete' . $context->getId(), $request->request->get('_token'))) {
             $this->entityManager->remove($context);
             $this->entityManager->flush();
@@ -138,5 +157,12 @@ class ContextController extends AbstractController
         }
 
         return $this->redirectToRoute('context_index');
+    }
+
+    private function denyAccessUnlessOwner(Context $context): void
+    {
+        if ($context->getOwner() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
     }
 }

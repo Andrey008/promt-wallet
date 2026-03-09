@@ -52,6 +52,10 @@ class Context
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $owner = null;
+
     /**
      * @var Collection<int, Tag>
      */
@@ -194,6 +198,17 @@ class Context
     public function isGlobal(): bool
     {
         return $this->scope === self::SCOPE_GLOBAL;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
+        return $this;
     }
 
     public function __toString(): string

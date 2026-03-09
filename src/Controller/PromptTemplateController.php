@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\PromptTemplate;
+use App\Entity\User;
 use App\Form\PromptTemplateType;
 use App\Repository\PromptTemplateRepository;
 use App\Service\PromptComposerService;
@@ -24,12 +25,14 @@ class PromptTemplateController extends AbstractController
     #[Route('', name: 'template_index', methods: ['GET'])]
     public function index(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
         $model = $request->query->get('model');
 
         if ($model) {
-            $templates = $this->templateRepository->findByTargetModel($model);
+            $templates = $this->templateRepository->findByTargetModel($model, $user);
         } else {
-            $templates = $this->templateRepository->findAllOrdered();
+            $templates = $this->templateRepository->findAllOrdered($user);
         }
 
         return $this->render('template/index.html.twig', [
@@ -47,6 +50,9 @@ class PromptTemplateController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            /** @var User $user */
+            $user = $this->getUser();
+            $template->setOwner($user);
             $this->entityManager->persist($template);
             $this->entityManager->flush();
 
@@ -64,11 +70,13 @@ class PromptTemplateController extends AbstractController
     #[Route('/search', name: 'template_search', methods: ['GET'])]
     public function search(Request $request): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
         $query = $request->query->get('q', '');
         $templates = [];
 
         if (strlen($query) >= 2) {
-            $templates = $this->templateRepository->search($query);
+            $templates = $this->templateRepository->search($query, $user);
         }
 
         return $this->render('template/search.html.twig', [
@@ -80,6 +88,8 @@ class PromptTemplateController extends AbstractController
     #[Route('/{id}', name: 'template_show', methods: ['GET'])]
     public function show(PromptTemplate $template): Response
     {
+        $this->denyAccessUnlessOwner($template);
+
         $preview = $this->composerService->previewTemplate($template);
 
         return $this->render('template/show.html.twig', [
@@ -92,6 +102,8 @@ class PromptTemplateController extends AbstractController
     #[Route('/{id}/edit', name: 'template_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, PromptTemplate $template): Response
     {
+        $this->denyAccessUnlessOwner($template);
+
         $form = $this->createForm(PromptTemplateType::class, $template);
         $form->handleRequest($request);
 
@@ -113,6 +125,8 @@ class PromptTemplateController extends AbstractController
     #[Route('/{id}/delete', name: 'template_delete', methods: ['POST'])]
     public function delete(Request $request, PromptTemplate $template): Response
     {
+        $this->denyAccessUnlessOwner($template);
+
         if ($this->isCsrfTokenValid('delete' . $template->getId(), $request->request->get('_token'))) {
             $this->entityManager->remove($template);
             $this->entityManager->flush();
@@ -121,5 +135,12 @@ class PromptTemplateController extends AbstractController
         }
 
         return $this->redirectToRoute('template_index');
+    }
+
+    private function denyAccessUnlessOwner(PromptTemplate $template): void
+    {
+        if ($template->getOwner() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
     }
 }

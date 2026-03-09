@@ -36,6 +36,10 @@ class Project
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $owner = null;
+
     /**
      * @var Collection<int, Context>
      */
@@ -164,6 +168,17 @@ class Project
                 $context->setProject(null);
             }
         }
+        return $this;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
         return $this;
     }
 

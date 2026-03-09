@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\ContextRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\PromptTemplateRepository;
@@ -22,14 +23,17 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(): Response
     {
-        $recentProjects = $this->projectRepository->findRecent(5);
-        $recentContexts = $this->contextRepository->findRecent(5);
-        $recentTemplates = $this->templateRepository->findRecent(5);
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $recentProjects = $this->projectRepository->findRecent($user, 5);
+        $recentContexts = $this->contextRepository->findRecent($user, 5);
+        $recentTemplates = $this->templateRepository->findRecent($user, 5);
 
         $stats = [
-            'projects' => count($this->projectRepository->findAll()),
-            'contexts' => count($this->contextRepository->findAll()),
-            'templates' => count($this->templateRepository->findAll()),
+            'projects' => count($this->projectRepository->findAllOrdered($user)),
+            'contexts' => count($this->contextRepository->findAllOrdered($user)),
+            'templates' => count($this->templateRepository->findAllOrdered($user)),
             'tags' => count($this->tagRepository->findAll()),
         ];
 
