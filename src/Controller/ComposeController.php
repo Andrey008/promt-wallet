@@ -2,11 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\PromptComposition;
 use App\Entity\User;
 use App\Repository\ContextRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\PromptTemplateRepository;
+use App\Repository\SnippetRepository;
 use App\Service\PromptComposerService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +23,9 @@ class ComposeController extends AbstractController
         private ProjectRepository $projectRepository,
         private ContextRepository $contextRepository,
         private PromptTemplateRepository $templateRepository,
-        private PromptComposerService $composerService
+        private SnippetRepository $snippetRepository,
+        private PromptComposerService $composerService,
+        private EntityManagerInterface $entityManager
     ) {}
 
     #[Route('', name: 'compose_index', methods: ['GET'])]
@@ -56,6 +61,8 @@ class ComposeController extends AbstractController
             }
         }
 
+        $snippets = $this->snippetRepository->findAllOrdered($user);
+
         return $this->render('compose/index.html.twig', [
             'projects' => $projects,
             'templates' => $templates,
@@ -64,6 +71,7 @@ class ComposeController extends AbstractController
             'selectedTemplate' => $selectedTemplate,
             'selectedContextIds' => $selectedContextIds,
             'placeholders' => $this->composerService->getAvailablePlaceholders(),
+            'snippets' => $snippets,
         ]);
     }
 
@@ -78,6 +86,7 @@ class ComposeController extends AbstractController
         $projectId = $data['project'] ?? null;
         $templateId = $data['template'] ?? null;
         $contextIds = $data['contexts'] ?? [];
+        $snippetIds = $data['snippets'] ?? [];
 
         if (empty($templateId)) {
             return new JsonResponse([
@@ -108,7 +117,25 @@ class ComposeController extends AbstractController
             usort($contexts, fn($a, $b) => $a->getSortOrder() <=> $b->getSortOrder());
         }
 
-        $result = $this->composerService->compose($template, $contexts, $project);
+        $snippets = [];
+        if (!empty($snippetIds)) {
+            $snippets = $this->snippetRepository->findBy(['id' => $snippetIds, 'owner' => $user]);
+        }
+
+        $result = $this->composerService->compose($template, $contexts, $project, $snippets);
+
+        $contextTitles = array_map(fn($c) => $c->getTitle(), $contexts);
+        $snippetTitles = array_map(fn($s) => $s->getTitle(), $snippets);
+
+        $composition = new PromptComposition();
+        $composition->setComposedText($result);
+        $composition->setTemplateTitle($template->getTitle());
+        $composition->setProjectName($project?->getName());
+        $composition->setContextTitles(array_merge($contextTitles, $snippetTitles));
+        $composition->setOwner($user);
+
+        $this->entityManager->persist($composition);
+        $this->entityManager->flush();
 
         return new JsonResponse([
             'success' => true,

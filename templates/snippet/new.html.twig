@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Snippet - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-plus-lg me-2"></i>New Snippet</h1>
+</div>
+
+{% include 'snippet/_form.html.twig' with {'button_label': 'Create Snippet'} %}
+{% endblock %}

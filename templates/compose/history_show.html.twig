@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Composition Detail - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clock-history me-2"></i>Composition Detail</h1>
+    <div>
+        <a href="{{ path('compose_index') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-repeat me-1"></i> Re-compose
+        </a>
+        <a href="{{ path('composition_history_index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to History
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-terminal me-2"></i>Composed Text</span>
+                <button type="button" class="btn btn-sm btn-primary btn-copy" data-copy-target="#composed-text">
+                    <i class="bi bi-clipboard me-1"></i> Copy
+                </button>
+            </div>
+            <div class="card-body">
+                <pre class="prompt-preview bg-light p-3 rounded mb-0" id="composed-text">{{ composition.composedText }}</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-2"></i>Metadata
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <small class="text-muted d-block">Date</small>
+                    {{ composition.createdAt|date('M d, Y H:i:s') }}
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted d-block">Template</small>
+                    {{ composition.templateTitle }}
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted d-block">Project</small>
+                    {{ composition.projectName ?? 'None' }}
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted d-block">Contexts ({{ composition.contextTitles|length }})</small>
+                    {% if composition.contextTitles|length > 0 %}
+                        {% for title in composition.contextTitles %}
+                            <span class="badge bg-secondary me-1 mb-1">{{ title }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">None</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted d-block">Length</small>
+                    {{ composition.composedText|length|number_format }} characters
+                </li>
+            </ul>
+        </div>
+
+        <form method="post" action="{{ path('composition_history_delete', {'id': composition.id}) }}" onsubmit="return confirm('Delete this composition?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ composition.id) }}">
+            <button type="submit" class="btn btn-outline-danger w-100">
+                <i class="bi bi-trash me-1"></i> Delete Composition
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

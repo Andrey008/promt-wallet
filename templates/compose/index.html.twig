@@ -5,6 +5,9 @@
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-magic me-2"></i>Compose Prompt</h1>
+    <a href="{{ path('composition_history_index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history me-1"></i> History
+    </a>
 </div>
 
 <div class="row">
@@ -83,6 +86,28 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Snippets Selection -->
+                {% if snippets|length > 0 %}
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="bi bi-code-square me-1"></i>Snippets
+                    </label>
+                    <div id="snippets-container" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                        {% for snippet in snippets %}
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input snippet-checkbox"
+                                       id="snippet-{{ snippet.id }}"
+                                       value="{{ snippet.id }}">
+                                <label class="form-check-label" for="snippet-{{ snippet.id }}">
+                                    {{ snippet.title }}
+                                    <small class="text-muted">({{ snippet.content|length }} chars)</small>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <button type="button" class="btn btn-primary w-100" id="compose-btn">
                     <i class="bi bi-play me-1"></i> Compose
@@ -200,6 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const projectId = projectSelect.value;
         const contextIds = Array.from(document.querySelectorAll('.context-checkbox:checked'))
             .map(cb => parseInt(cb.value));
+        const snippetIds = Array.from(document.querySelectorAll('.snippet-checkbox:checked'))
+            .map(cb => parseInt(cb.value));
 
         if (!templateId) {
             showError('Please select a template.');
@@ -219,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     project: projectId || null,
                     template: templateId,
                     contexts: contextIds,
+                    snippets: snippetIds,
                 }),
             });
 

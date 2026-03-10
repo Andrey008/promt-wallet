@@ -35,18 +35,38 @@
                         <i class="bi bi-tags me-1"></i> Tags
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ app.request.attributes.get('_route') starts with 'snippet_' ? 'active' : '' }}"
+                       href="{{ path('snippet_index') }}">
+                        <i class="bi bi-code-square me-1"></i> Snippets
+                    </a>
+                </li>
             </ul>
 
             <div class="d-flex align-items-center">
                 <a href="{{ path('compose_index') }}" class="btn btn-light me-3">
                     <i class="bi bi-magic me-1"></i> Compose Prompt
                 </a>
+                <button type="button" class="btn btn-outline-light btn-sm me-3" data-bs-toggle="modal" data-bs-target="#keyboardShortcutsModal" title="Keyboard Shortcuts (?)">
+                    <i class="bi bi-keyboard"></i>
+                </button>
                 <div class="dropdown">
                     <a class="nav-link text-white dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle me-1"></i> {{ app.user.displayName }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><span class="dropdown-item-text text-muted small">{{ app.user.email }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="toggleTheme(); return false;">
+                                <i id="theme-icon" class="bi bi-moon me-1"></i> Toggle Theme
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ path('import_export_export') }}">
+                                <i class="bi bi-arrow-left-right me-1"></i> Import / Export
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ path('app_logout') }}">

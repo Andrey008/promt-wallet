@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Composition History - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-clock-history me-2"></i>Composition History</h1>
+    <a href="{{ path('compose_index') }}" class="btn btn-primary">
+        <i class="bi bi-magic me-1"></i> New Composition
+    </a>
+</div>
+
+{% if compositions|length > 0 %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Template</th>
+                    <th>Project</th>
+                    <th>Contexts</th>
+                    <th>Length</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for composition in compositions %}
+                <tr>
+                    <td>
+                        <small>{{ composition.createdAt|date('M d, Y H:i') }}</small>
+                    </td>
+                    <td>{{ composition.templateTitle }}</td>
+                    <td>
+                        {% if composition.projectName %}
+                            <span class="badge bg-primary">{{ composition.projectName }}</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">{{ composition.contextTitles|length }}</span>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ composition.composedText|length|number_format }} chars</small>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ path('composition_history_show', {'id': composition.id}) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <form method="post" action="{{ path('composition_history_delete', {'id': composition.id}) }}" class="d-inline" onsubmit="return confirm('Delete this composition?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ composition.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <i class="bi bi-clock-history d-block"></i>
+        <h5>No compositions yet</h5>
+        <p class="text-muted">Composed prompts will appear here after you use the Compose feature.</p>
+        <a href="{{ path('compose_index') }}" class="btn btn-primary">
+            <i class="bi bi-magic me-1"></i> Compose Your First Prompt
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

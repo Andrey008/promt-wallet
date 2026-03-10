@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Repository\ContextRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\PromptTemplateRepository;
+use App\Repository\SnippetRepository;
 use App\Repository\TagRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,8 @@ class HomeController extends AbstractController
         private ProjectRepository $projectRepository,
         private ContextRepository $contextRepository,
         private PromptTemplateRepository $templateRepository,
-        private TagRepository $tagRepository
+        private TagRepository $tagRepository,
+        private SnippetRepository $snippetRepository
     ) {}
 
     #[Route('/', name: 'app_home')]
@@ -35,6 +37,7 @@ class HomeController extends AbstractController
             'contexts' => count($this->contextRepository->findAllOrdered($user)),
             'templates' => count($this->templateRepository->findAllOrdered($user)),
             'tags' => count($this->tagRepository->findAll()),
+            'snippets' => count($this->snippetRepository->findAllOrdered($user)),
         ];
 
         return $this->render('home/index.html.twig', [

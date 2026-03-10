@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Export Data - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-download me-2"></i>Export Data</h1>
+    <a href="{{ path('import_export_import') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-upload me-1"></i> Import
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted">Export all your projects, contexts, templates, and snippets as a downloadable file.</p>
+
+                <form method="post" action="{{ path('import_export_download') }}">
+                    <div class="mb-4">
+                        <label class="form-label">Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format" id="format-json" value="json" checked>
+                            <label class="form-check-label" for="format-json">
+                                JSON <small class="text-muted">(.json)</small>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format" id="format-yaml" value="yaml">
+                            <label class="form-check-label" for="format-yaml">
+                                YAML <small class="text-muted">(.yaml)</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-download me-1"></i> Download Export
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

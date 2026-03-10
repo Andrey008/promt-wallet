@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Context;
 use App\Entity\Project;
 use App\Entity\PromptTemplate;
+use App\Entity\Snippet;
 
 class PromptComposerService
 {
@@ -13,6 +14,7 @@ class PromptComposerService
      */
     public const PLACEHOLDERS = [
         '{{context}}' => 'All selected contexts combined',
+        '{{snippets}}' => 'All selected snippets combined',
         '{{project.name}}' => 'Project name',
         '{{project.stack}}' => 'Project technology stack',
         '{{project.description}}' => 'Project description',
@@ -24,15 +26,17 @@ class PromptComposerService
      * Compose final prompt from template and contexts
      *
      * @param Context[] $contexts
+     * @param Snippet[] $snippets
      */
     public function compose(
         PromptTemplate $template,
         array $contexts,
-        ?Project $project = null
+        ?Project $project = null,
+        array $snippets = []
     ): string {
         $body = $template->getBody();
 
-        return $this->replacePlaceholders($body, $contexts, $project);
+        return $this->replacePlaceholders($body, $contexts, $project, $snippets);
     }
 
     /**
@@ -66,17 +70,39 @@ class PromptComposerService
     }
 
     /**
+     * Render snippets as formatted text block
+     *
+     * @param Snippet[] $snippets
+     */
+    public function renderSnippets(array $snippets): string
+    {
+        if (empty($snippets)) {
+            return '';
+        }
+
+        $parts = [];
+        foreach ($snippets as $snippet) {
+            $parts[] = "## " . $snippet->getTitle() . "\n\n" . $snippet->getContent();
+        }
+
+        return implode("\n\n---\n\n", $parts);
+    }
+
+    /**
      * Replace placeholders in template body
      *
      * @param Context[] $contexts
+     * @param Snippet[] $snippets
      */
     public function replacePlaceholders(
         string $body,
         array $contexts,
-        ?Project $project
+        ?Project $project,
+        array $snippets = []
     ): string {
         $replacements = [
             '{{context}}' => $this->renderContexts($contexts),
+            '{{snippets}}' => $this->renderSnippets($snippets),
             '{{date}}' => date('Y-m-d'),
             '{{datetime}}' => date('Y-m-d H:i:s'),
         ];
