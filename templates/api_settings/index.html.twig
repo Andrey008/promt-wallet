@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}API Tokens — {{ app_name }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-key me-2"></i>API Tokens</h1>
+</div>
+
+{# New token alert — shown only once after creation #}
+{% if newToken is defined and newToken %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <h5 class="alert-heading"><i class="bi bi-check-circle me-1"></i> Token "{{ newTokenName }}" created!</h5>
+    <p class="mb-2">Copy your API token now. You won't be able to see it again.</p>
+    <div class="input-group mb-2" style="max-width: 600px;">
+        <input type="text" class="form-control font-monospace" id="new-token-value" value="{{ newToken }}" readonly>
+        <button class="btn btn-outline-secondary" type="button" data-copy-target="#new-token-value">
+            <i class="bi bi-clipboard me-1"></i> Copy
+        </button>
+    </div>
+    <hr>
+    <p class="mb-0 small text-muted">Use this token in the <code>Authorization: Bearer &lt;token&gt;</code> header.</p>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{# Create form #}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Generate New Token</h5>
+        <form method="post" action="{{ path('api_tokens_create') }}" class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label for="token-name" class="form-label">Token Name</label>
+                <input type="text" class="form-control" id="token-name" name="name" placeholder="e.g. My Script, CI/CD, CLI tool" required maxlength="100">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Generate Token
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# Token list #}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Your Tokens</h5>
+    </div>
+    {% if tokens is empty %}
+    <div class="empty-state">
+        <i class="bi bi-key d-block"></i>
+        <p>No API tokens yet. Generate one above to get started.</p>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Token</th>
+                    <th>Created</th>
+                    <th>Last Used</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for token in tokens %}
+                <tr class="{{ not token.active ? 'text-muted' : '' }}">
+                    <td>{{ token.name }}</td>
+                    <td><code>{{ token.maskedToken }}</code></td>
+                    <td>{{ token.createdAt|date('M j, Y') }}</td>
+                    <td>{{ token.lastUsedAt ? token.lastUsedAt|date('M j, Y H:i') : 'Never' }}</td>
+                    <td>
+                        {% if token.active %}
+                            {% if token.valid %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-warning">Expired</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">Revoked</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if token.active %}
+                        <form method="post" action="{{ path('api_tokens_revoke', {id: token.id}) }}" class="d-inline" onsubmit="return confirm('Revoke token &quot;{{ token.name }}&quot;? This cannot be undone.');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-x-circle me-1"></i> Revoke
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+{# Usage example #}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Usage</h5>
+    </div>
+    <div class="card-body">
+        <p>Use your API token in the <code>Authorization</code> header:</p>
+        <pre class="bg-light p-3 rounded"><code>curl -H "Authorization: Bearer YOUR_TOKEN" {{ app.request.schemeAndHttpHost }}/api/v1/projects</code></pre>
+        <p class="mb-0">
+            <a href="{{ path('app.swagger_ui') }}" target="_blank">
+                <i class="bi bi-book me-1"></i> View API Documentation (Swagger UI)
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

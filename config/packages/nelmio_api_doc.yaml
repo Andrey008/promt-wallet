@@ -1,0 +1,17 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: 'Prompt Wallet API'
+            description: 'REST API for Prompt Wallet — manage projects, contexts, templates, snippets, and compose prompts.'
+            version: '1.0.0'
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: 'API Token'
+        security:
+            - Bearer: []
+    areas:
+        path_patterns:
+            - ^/api/v1

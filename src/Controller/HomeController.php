@@ -25,9 +25,13 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(): Response
     {
-        /** @var User $user */
         $user = $this->getUser();
 
+        if (!$user) {
+            return $this->render('home/landing.html.twig');
+        }
+
+        /** @var User $user */
         $recentProjects = $this->projectRepository->findRecent($user, 5);
         $recentContexts = $this->contextRepository->findRecent($user, 5);
         $recentTemplates = $this->templateRepository->findRecent($user, 5);

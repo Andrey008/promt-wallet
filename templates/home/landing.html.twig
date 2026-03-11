@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ app_name }} — Prompt & Context Management{% endblock %}
+
+{% block body %}
+{# Hero Section #}
+<div class="text-center py-5 mb-5">
+    <h1 class="display-4 fw-bold mb-3">
+        <i class="bi bi-journal-code text-primary"></i> {{ app_name }}
+    </h1>
+    <p class="lead text-muted mb-4" style="max-width: 600px; margin: 0 auto;">
+        Organize your AI prompts, contexts, and templates in one place.
+        Compose powerful prompts with reusable building blocks.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ path('app_register') }}" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-person-plus me-1"></i> Get Started
+        </a>
+        <a href="{{ path('app_login') }}" class="btn btn-outline-secondary btn-lg px-4">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Login
+        </a>
+    </div>
+</div>
+
+{# Features Section #}
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="mb-3">
+                <i class="bi bi-folder text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h5 class="fw-bold">Projects</h5>
+            <p class="text-muted mb-0">Group your work by project. Define tech stacks and keep contexts organized per project.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="mb-3">
+                <i class="bi bi-file-text text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h5 class="fw-bold">Contexts</h5>
+            <p class="text-muted mb-0">Store reusable context blocks — coding standards, architecture docs, API references — and tag them for easy discovery.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="mb-3">
+                <i class="bi bi-file-earmark-code text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h5 class="fw-bold">Templates</h5>
+            <p class="text-muted mb-0">Build prompt templates with placeholders. Target specific AI models — Claude, Cursor, Copilot, or universal.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="mb-3">
+                <i class="bi bi-magic text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h5 class="fw-bold">Compose</h5>
+            <p class="text-muted mb-0">Combine templates, contexts, and snippets into rich, structured prompts — ready to copy and use.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="mb-3">
+                <i class="bi bi-code-square text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h5 class="fw-bold">Snippets</h5>
+            <p class="text-muted mb-0">Keep short, reusable text blocks for quick insertion into your composed prompts.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm text-center p-4">
+            <div class="mb-3">
+                <i class="bi bi-braces text-primary" style="font-size: 2.5rem;"></i>
+            </div>
+            <h5 class="fw-bold">REST API</h5>
+            <p class="text-muted mb-0">Access your data programmatically via a full REST API with Bearer token authentication and Swagger docs.</p>
+        </div>
+    </div>
+</div>
+
+{# How It Works Section #}
+<div class="py-5 mb-5">
+    <h2 class="text-center fw-bold mb-4">How It Works</h2>
+    <div class="row g-4">
+        <div class="col-md-4 text-center">
+            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: bold;">1</div>
+            <h5 class="fw-bold">Create</h5>
+            <p class="text-muted">Add projects, contexts, templates, and snippets — your prompt building blocks.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: bold;">2</div>
+            <h5 class="fw-bold">Organize</h5>
+            <p class="text-muted">Tag and categorize your content. Link contexts to projects. Set sort order for priority.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: bold;">3</div>
+            <h5 class="fw-bold">Compose</h5>
+            <p class="text-muted">Pick a template, select contexts, and generate a polished prompt — one click to copy.</p>
+        </div>
+    </div>
+</div>
+
+{# Footer CTA #}
+<div class="text-center py-5 bg-light rounded-3 mb-4">
+    <h3 class="fw-bold mb-3">Ready to streamline your AI workflow?</h3>
+    <p class="text-muted mb-4">Start managing your prompts and contexts today.</p>
+    <a href="{{ path('app_register') }}" class="btn btn-primary btn-lg px-5">
+        <i class="bi bi-rocket-takeoff me-1"></i> Create Free Account
+    </a>
+</div>
+{% endblock %}
